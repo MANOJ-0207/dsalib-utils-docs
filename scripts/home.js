@@ -1,10 +1,10 @@
+'use strict';
+
 // ============================
 // THEME MANAGEMENT MODULE
+// (keeps behavior identical to working doc.js)
 // ============================
 const ThemeManager = {
-    /**
-     * Applies the saved theme or default theme based on user preference
-     */
     applySavedTheme() {
         const savedTheme = localStorage.getItem("theme");
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -12,9 +12,6 @@ const ThemeManager = {
         document.documentElement.setAttribute("data-theme", theme);
     },
 
-    /**
-     * Toggles between light and dark theme
-     */
     toggleTheme() {
         const root = document.documentElement;
         const currentTheme = root.getAttribute("data-theme");
@@ -23,14 +20,15 @@ const ThemeManager = {
         localStorage.setItem("theme", newTheme);
     },
 
-    /**
-     * Initializes theme management
-     */
     init() {
         this.applySavedTheme();
         const themeToggle = document.getElementById("themeToggle");
         if (themeToggle) {
-            themeToggle.addEventListener("click", () => this.toggleTheme());
+            // avoid duplicate listeners if init called multiple times
+            if (!themeToggle._themeListenerAttached) {
+                themeToggle.addEventListener("click", () => this.toggleTheme());
+                themeToggle._themeListenerAttached = true;
+            }
         }
     }
 };
@@ -39,18 +37,12 @@ const ThemeManager = {
 // ACCORDION ANIMATION MODULE
 // ============================
 const AccordionAnimator = {
-    /**
-     * Expands an accordion panel with smooth animation
-     * @param {HTMLElement} panel - The panel to expand
-     * @param {HTMLElement} chevron - The chevron element to rotate
-     */
     expand(panel, chevron) {
         panel.classList.add('opening');
         panel.style.height = '0px';
         panel.style.visibility = 'visible';
         panel.style.pointerEvents = 'auto';
 
-        // Get natural height
         const height = panel.scrollHeight + 'px';
 
         requestAnimationFrame(() => {
@@ -61,9 +53,9 @@ const AccordionAnimator = {
             if (e.propertyName === 'height') {
                 panel.classList.remove('opening');
                 panel.classList.add('open');
-                panel.style.height = 'auto'; // Remove fixed height
+                panel.style.height = 'auto';
                 panel.removeEventListener('transitionend', onEnd);
-                
+
                 // Ensure all child accordions are closed when parent opens
                 AccordionAnimator.ensureChildAccordionsClosed(panel);
             }
@@ -72,15 +64,10 @@ const AccordionAnimator = {
         if (chevron) chevron.textContent = '▾';
     },
 
-    /**
-     * Collapses an accordion panel with smooth animation
-     * @param {HTMLElement} panel - The panel to collapse
-     * @param {HTMLElement} chevron - The chevron element to rotate
-     */
     collapse(panel, chevron) {
         // Close all child accordions first
         this.closeAllChildAccordions(panel);
-        
+
         panel.classList.add('closing');
 
         // Set fixed height before collapsing
@@ -103,43 +90,30 @@ const AccordionAnimator = {
         if (chevron) chevron.textContent = '▸';
     },
 
-    /**
-     * Closes all child accordion panels within a parent panel
-     * @param {HTMLElement} parentPanel - The parent panel to search for child accordions
-     */
     closeAllChildAccordions(parentPanel) {
         const childPanels = parentPanel.querySelectorAll('.accordion-panel.open');
         childPanels.forEach(childPanel => {
             const parentButton = childPanel.previousElementSibling;
             if (parentButton && parentButton.classList.contains('accordion-btn')) {
                 const childChevron = parentButton.querySelector('.chevron');
-                
+
                 // Directly close without animation for cleaner UX
                 childPanel.classList.remove('open', 'opening', 'closing');
                 childPanel.style.height = '';
                 childPanel.style.visibility = 'hidden';
                 childPanel.style.pointerEvents = 'none';
-                
+
                 if (childChevron) childChevron.textContent = '▸';
             }
         });
     },
 
-    /**
-     * Ensures all child accordions are closed when parent opens
-     * @param {HTMLElement} parentPanel - The parent panel that was opened
-     */
     ensureChildAccordionsClosed(parentPanel) {
-        // Wait for the parent to finish opening, then ensure children are closed
         setTimeout(() => {
             this.closeAllChildAccordions(parentPanel);
-        }, 50); // Small delay to ensure parent animation completes
+        }, 50);
     },
 
-    /**
-     * Toggle accordion panel open/closed state
-     * @param {HTMLElement} button - The accordion button that was clicked
-     */
     toggleAccordion(button) {
         const panel = button.nextElementSibling;
         const chevron = button.querySelector('.chevron');
@@ -274,12 +248,6 @@ const DOC_DATA = {
 // SVG ICON FACTORY
 // ============================
 const SVGIconFactory = {
-    /**
-     * Creates SVG namespace element
-     * @param {string} tagName - SVG element tag name
-     * @param {Object} attributes - Attributes to set on the element
-     * @returns {SVGElement} The created SVG element
-     */
     createSVGElement(tagName, attributes = {}) {
         const element = document.createElementNS('http://www.w3.org/2000/svg', tagName);
         Object.entries(attributes).forEach(([key, value]) => {
@@ -288,181 +256,58 @@ const SVGIconFactory = {
         return element;
     },
 
-    /**
-     * Creates an interface icon SVG
-     * @returns {SVGElement} Interface icon
-     */
     createInterfaceIcon() {
-        const svg = this.createSVGElement('svg', {
-            class: 'svg',
-            width: '20',
-            height: '20',
-            viewBox: '0 0 40 40'
-        });
-
-        const circle = this.createSVGElement('circle', {
-            cx: '20',
-            cy: '20',
-            r: '18',
-            stroke: 'currentColor',
-            'stroke-width': '2',
-            fill: 'none'
-        });
-
+        const svg = this.createSVGElement('svg', { class: 'svg', width: '20', height: '20', viewBox: '0 0 40 40' });
+        const circle = this.createSVGElement('circle', { cx: '20', cy: '20', r: '18', stroke: 'currentColor', 'stroke-width': '2', fill: 'none' });
         const group = this.createSVGElement('g', { fill: 'currentColor' });
-        
-        const rect1 = this.createSVGElement('rect', {
-            x: '17', y: '10', width: '6', height: '2'
-        });
-        
-        const rect2 = this.createSVGElement('rect', {
-            x: '19', y: '12', width: '2', height: '12'
-        });
-        
-        const rect3 = this.createSVGElement('rect', {
-            x: '17', y: '24', width: '6', height: '2'
-        });
-
+        const rect1 = this.createSVGElement('rect', { x: '17', y: '10', width: '6', height: '2' });
+        const rect2 = this.createSVGElement('rect', { x: '19', y: '12', width: '2', height: '12' });
+        const rect3 = this.createSVGElement('rect', { x: '17', y: '24', width: '6', height: '2' });
         group.appendChild(rect1);
         group.appendChild(rect2);
         group.appendChild(rect3);
-
         svg.appendChild(circle);
         svg.appendChild(group);
-
         return svg;
     },
 
-    /**
-     * Creates a class icon SVG
-     * @returns {SVGElement} Class icon
-     */
     createClassIcon() {
-        const svg = this.createSVGElement('svg', {
-            class: 'svg',
-            width: '20',
-            height: '20',
-            viewBox: '0 0 40 40'
-        });
-
-        const circle = this.createSVGElement('circle', {
-            cx: '20',
-            cy: '20',
-            r: '18',
-            stroke: 'currentColor',
-            'stroke-width': '2',
-            fill: 'none'
-        });
-
-        const text = this.createSVGElement('text', {
-            x: '20',
-            y: '27',
-            'text-anchor': 'middle',
-            'font-size': '20',
-            'font-family': 'Arial, sans-serif',
-            'font-weight': 'bold',
-            fill: 'currentColor'
-        });
+        const svg = this.createSVGElement('svg', { class: 'svg', width: '20', height: '20', viewBox: '0 0 40 40' });
+        const circle = this.createSVGElement('circle', { cx: '20', cy: '20', r: '18', stroke: 'currentColor', 'stroke-width': '2', fill: 'none' });
+        const text = this.createSVGElement('text', { x: '20', y: '27', 'text-anchor': 'middle', 'font-size': '20', 'font-family': 'Arial, sans-serif', 'font-weight': 'bold', fill: 'currentColor' });
         text.textContent = 'C';
-
         svg.appendChild(circle);
         svg.appendChild(text);
-
         return svg;
     },
 
-    /**
-     * Creates an abstract class icon SVG
-     * @returns {SVGElement} Abstract class icon
-     */
     createAbstractIcon() {
-        const svg = this.createSVGElement('svg', {
-            class: 'svg',
-            width: '20',
-            height: '20',
-            viewBox: '0 0 40 40'
-        });
-
-        const circle = this.createSVGElement('circle', {
-            cx: '20',
-            cy: '20',
-            r: '18',
-            stroke: 'currentColor',
-            'stroke-width': '2',
-            fill: 'none'
-        });
-
-        const text = this.createSVGElement('text', {
-            x: '20',
-            y: '27',
-            'text-anchor': 'middle',
-            'font-size': '20',
-            'font-family': 'Arial, sans-serif',
-            'font-weight': 'bold',
-            fill: 'currentColor'
-        });
+        const svg = this.createSVGElement('svg', { class: 'svg', width: '20', height: '20', viewBox: '0 0 40 40' });
+        const circle = this.createSVGElement('circle', { cx: '20', cy: '20', r: '18', stroke: 'currentColor', 'stroke-width': '2', fill: 'none' });
+        const text = this.createSVGElement('text', { x: '20', y: '27', 'text-anchor': 'middle', 'font-size': '20', 'font-family': 'Arial, sans-serif', 'font-weight': 'bold', fill: 'currentColor' });
         text.textContent = 'A';
-
         svg.appendChild(circle);
         svg.appendChild(text);
-
         return svg;
     },
 
-    /**
-     * Creates a record icon SVG
-     * @returns {SVGElement} Record icon
-     */
     createRecordIcon() {
-        const svg = this.createSVGElement('svg', {
-            class: 'svg',
-            width: '20',
-            height: '20',
-            viewBox: '0 0 40 40'
-        });
-
-        const circle = this.createSVGElement('circle', {
-            cx: '20',
-            cy: '20',
-            r: '18',
-            stroke: 'currentColor',
-            'stroke-width': '2',
-            fill: 'none'
-        });
-
-        const text = this.createSVGElement('text', {
-            x: '20',
-            y: '27',
-            'text-anchor': 'middle',
-            'font-size': '20',
-            'font-family': 'Arial, sans-serif',
-            'font-weight': 'bold',
-            fill: 'currentColor'
-        });
+        const svg = this.createSVGElement('svg', { class: 'svg', width: '20', height: '20', viewBox: '0 0 40 40' });
+        const circle = this.createSVGElement('circle', { cx: '20', cy: '20', r: '18', stroke: 'currentColor', 'stroke-width': '2', fill: 'none' });
+        const text = this.createSVGElement('text', { x: '20', y: '27', 'text-anchor': 'middle', 'font-size': '20', 'font-family': 'Arial, sans-serif', 'font-weight': 'bold', fill: 'currentColor' });
         text.textContent = 'R';
-
         svg.appendChild(circle);
         svg.appendChild(text);
-
         return svg;
     },
 
-    /**
-     * Gets the appropriate icon for a given type
-     * @param {string} type - The type (interface, class, abstract, record)
-     * @returns {SVGElement} The icon element
-     */
     getIcon(type) {
         switch (type) {
-            case 'interface':
-                return this.createInterfaceIcon();
-            case 'abstract':
-                return this.createAbstractIcon();
-            case 'record':
-                return this.createRecordIcon();
+            case 'interface': return this.createInterfaceIcon();
+            case 'abstract': return this.createAbstractIcon();
+            case 'record': return this.createRecordIcon();
             case 'class':
-            default:
-                return this.createClassIcon();
+            default: return this.createClassIcon();
         }
     }
 };
@@ -471,11 +316,6 @@ const SVGIconFactory = {
 // DOM ELEMENT FACTORY
 // ============================
 const DOMElementFactory = {
-    /**
-     * Creates a chevron span element
-     * @param {string} direction - Direction of chevron ('▸' or '▾')
-     * @returns {HTMLSpanElement} Chevron span element
-     */
     createChevron(direction = '▸') {
         const chevron = document.createElement('span');
         chevron.className = 'chevron';
@@ -483,84 +323,55 @@ const DOMElementFactory = {
         return chevron;
     },
 
-    /**
-     * Creates a package name strong element
-     * @param {string} packageName - Name of the package
-     * @returns {HTMLElement} Strong element with package name
-     */
     createPackageName(packageName) {
         const strong = document.createElement('strong');
         strong.textContent = `📦 ${packageName}`;
         return strong;
     },
 
-    /**
-     * Creates an accordion button
-     * @param {string} packageName - Name of the package
-     * @param {Function} clickHandler - Click event handler
-     * @returns {HTMLButtonElement} Accordion button element
-     */
     createAccordionButton(packageName, clickHandler) {
         const button = document.createElement('button');
         button.className = 'accordion-btn';
         button.addEventListener('click', clickHandler);
-        
+
         const chevron = this.createChevron();
         const packageNameElement = this.createPackageName(packageName);
-        
+
         button.appendChild(chevron);
         button.appendChild(document.createTextNode(' '));
         button.appendChild(packageNameElement);
-        
+
         return button;
     },
 
-    /**
-     * Creates an accordion panel
-     * @returns {HTMLDivElement} Accordion panel element
-     */
     createAccordionPanel() {
         const panel = document.createElement('div');
         panel.className = 'accordion-panel';
         return panel;
     },
 
-    /**
-     * Creates a documentation link
-     * @param {Object} item - The document item with name, type, and path
-     * @returns {HTMLAnchorElement} Documentation link element
-     */
     createDocumentationLink(item) {
         const link = document.createElement('a');
         link.href = item.path;
         link.className = `doc-link ${item.type}-link`;
         link.target = '_blank';
-        
+
         const icon = SVGIconFactory.getIcon(item.type);
         const textNode = document.createTextNode(item.name);
-        
+
         link.appendChild(icon);
         link.appendChild(document.createTextNode(' '));
         link.appendChild(textNode);
-        
+
         return link;
     },
 
-    /**
-     * Creates a main heading
-     * @param {string} text - Heading text
-     * @returns {HTMLHeadingElement} H3 heading element
-     */
     createHeading(text) {
         const heading = document.createElement('h3');
         heading.textContent = text;
         return heading;
     },
 
-    /**
-     * Creates an accordion section wrapper
-     * @returns {HTMLElement} Section element for accordion
-     */
     createAccordionSection() {
         const section = document.createElement('section');
         section.className = 'accordion';
@@ -572,69 +383,44 @@ const DOMElementFactory = {
 // ACCORDION NAVIGATION MODULE
 // ============================
 const AccordionNavigation = {
-    /**
-     * Creates accordion structure from data object
-     * @param {Object} data - The documentation data structure
-     * @param {HTMLElement} container - The container element to append to
-     */
     createAccordion(data, container) {
         Object.keys(data).forEach(key => {
             const item = data[key];
-            
+
             if (item.type === 'package') {
                 this.createPackageSection(key, item, container);
             } else if (item.name) {
-                // Direct item (not in array)
                 const link = DOMElementFactory.createDocumentationLink(item);
                 container.appendChild(link);
             }
         });
     },
 
-    /**
-     * Creates a package section with button and panel
-     * @param {string} packageName - Name of the package
-     * @param {Object} packageData - Package data object
-     * @param {HTMLElement} container - Container to append to
-     */
     createPackageSection(packageName, packageData, container) {
-        // Create package button with click handler
         const button = DOMElementFactory.createAccordionButton(
-            packageName, 
+            packageName,
             () => AccordionAnimator.toggleAccordion(button)
         );
-        
-        // Create panel
+
         const panel = DOMElementFactory.createAccordionPanel();
-        
-        // Process items
+
         this.processPackageItems(packageData.items, panel);
-        
+
         container.appendChild(button);
         container.appendChild(panel);
     },
 
-    /**
-     * Processes package items (arrays or nested objects)
-     * @param {Array|Object} items - Items to process
-     * @param {HTMLElement} panel - Panel to append items to
-     */
     processPackageItems(items, panel) {
         if (Array.isArray(items)) {
-            // Array of direct items
             items.forEach(docItem => {
                 const link = DOMElementFactory.createDocumentationLink(docItem);
                 panel.appendChild(link);
             });
         } else {
-            // Nested structure - recursively create accordion
             this.createAccordion(items, panel);
         }
     },
 
-    /**
-     * Initializes the accordion navigation and populates the container
-     */
     init() {
         const container = document.getElementById('container');
         if (!container) {
@@ -642,7 +428,7 @@ const AccordionNavigation = {
             return;
         }
 
-        // Clear any existing content
+        // Clear existing content
         container.innerHTML = '';
 
         // Create and append heading
@@ -651,10 +437,10 @@ const AccordionNavigation = {
 
         // Create accordion wrapper
         const accordionElement = DOMElementFactory.createAccordionSection();
-        
+
         // Populate the accordion with data
         this.createAccordion(DOC_DATA, accordionElement);
-        
+
         // Append to container
         container.appendChild(accordionElement);
 
@@ -663,16 +449,154 @@ const AccordionNavigation = {
 };
 
 // ============================
+// CODE SNIPPET MODULE
+// - minimal, self-contained, inserts snippet above package structure
+// ============================
+const CodeSnippetModule = (function() {
+    const MAVEN_SNIPPET = `
+<!-- This will include the Java Generic DSA Utils library (io.github.manoj-0207:dsalib-utils) -->
+<dependency>
+    <groupId>io.github.manoj-0207</groupId>
+    <artifactId>dsalib-utils</artifactId>
+    <version>1.0.0</version>
+</dependency>`;
+
+    // small SVGs as strings to keep module compact
+    const COPY_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9" stroke="currentColor" stroke-width="1.25" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const CHECK_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 12.5 L10.5 15.5 L16 9.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const FAIL_SVG  = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M9 9 L15 15 M15 9 L9 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>`;
+
+    function createSection() {
+        const section = document.createElement('section');
+        section.className = 'code-snippet';
+
+        // heading
+        const h3 = document.createElement('h3');
+        h3.innerHTML = `<span class="maven-logo" aria-hidden="true">Ⓜ</span> Maven Dependency`; // keep logo minimal - your CSS can replace
+        section.appendChild(h3);
+
+        // description
+        const p = document.createElement('p');
+        p.className = 'snippet-desc';
+        p.textContent = "Copy this snippet into your pom.xml to add the Java Generic DSA Utils library.";
+        p.style.margin = '0 0 0.6rem 0';
+        section.appendChild(p);
+
+        // code block
+        const block = document.createElement('div');
+        block.className = 'code-block';
+        block.style.position = 'relative';
+
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.id = 'maven-code';
+        code.textContent = MAVEN_SNIPPET;
+        pre.appendChild(code);
+        block.appendChild(pre);
+
+        // copy button
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'copy-btn';
+        button.setAttribute('aria-label', 'Copy maven dependency to clipboard');
+
+        const iconWrap = document.createElement('span');
+        iconWrap.className = 'icon';
+        iconWrap.innerHTML = COPY_SVG;
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = 'Copy';
+
+        button.appendChild(iconWrap);
+        button.appendChild(label);
+
+        button.addEventListener('click', async () => {
+            await copyToClipboard(MAVEN_SNIPPET, button, iconWrap, label);
+        });
+
+        block.appendChild(button);
+        section.appendChild(block);
+
+        return section;
+    }
+
+    async function copyToClipboard(text, button, iconWrap, label) {
+        // remember original
+        const originalHTML = iconWrap.innerHTML;
+        const originalLabel = label.textContent;
+
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+
+            // success state
+            button.classList.add('copied');
+            iconWrap.innerHTML = CHECK_SVG;
+            label.textContent = 'Copied';
+
+            setTimeout(() => {
+                button.classList.remove('copied');
+                iconWrap.innerHTML = originalHTML;
+                label.textContent = originalLabel;
+            }, 2000);
+        } catch (err) {
+            console.error('Copy failed', err);
+            button.classList.add('copied');
+            iconWrap.innerHTML = FAIL_SVG;
+            label.textContent = 'Failed';
+            setTimeout(() => {
+                button.classList.remove('copied');
+                iconWrap.innerHTML = originalHTML;
+                label.textContent = originalLabel;
+            }, 2000);
+        }
+    }
+
+    return {
+        init() {
+            const container = document.getElementById('container');
+            if (!container) return;
+
+            // create section
+            const section = createSection();
+
+            // find the first heading (Package Structure) — we want snippet ABOVE it
+            const firstHeading = container.querySelector('h3');
+            if (firstHeading && firstHeading.parentNode === container) {
+                container.insertBefore(section, firstHeading);
+            } else {
+                // fallback: prepend to container
+                container.prepend(section);
+            }
+        },
+
+        setSnippet(newSnippet) {
+            const codeEl = document.getElementById('maven-code');
+            if (codeEl) codeEl.textContent = newSnippet;
+        }
+    };
+})();
+
+// ============================
 // APPLICATION INITIALIZATION
 // ============================
 const App = {
-    /**
-     * Initializes the entire application
-     */
     init() {
         console.log('Initializing application...');
         ThemeManager.init();
         AccordionNavigation.init();
+        CodeSnippetModule.init(); // add snippet without changing other logic
         console.log('Application initialized successfully');
     }
 };

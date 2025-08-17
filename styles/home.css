@@ -1,43 +1,68 @@
 /* ============================
    CSS CUSTOM PROPERTIES (THEMES)
+   Light is default; dark overrides below
    ============================ */
 :root {
+  /* primary colors */
   --bg: #f7f9fb;
-  --border: #ccc;
   --card: #ffffff;
+  --border: #ccc;
   --heading-color: #0067c0;
   --hover: #0053a0;
   --primary: #0067c0;
   --links: #0067c0;
   --text: #1a1a1a;
+
+  /* snippet / control */
+  --surface: #f6f7f9;
+  --muted: #6b7280;
+  --code-bg: rgba(15,23,42,0.04);
+  --btn-bg: rgba(0,0,0,0.04);
+  --btn-border: rgba(0,0,0,0.08);
+  --btn-text: var(--text);
+  --copied-bg: #10b981;
+  --copied-text: #ffffff;
 }
 
 [data-theme='dark'] {
   --bg: #1b1b1b;
-  --border: #444;
   --card: #2a2a2a;
+  --border: #444;
   --heading-color: #f0f0f0;
   --hover: #1c3d5a;
-  --links: #8ab4f8;
   --primary: #102a43;
+  --links: #8ab4f8;
   --text: #f1f1f1;
+
+  /* snippet / control (dark) */
+  --surface: #071122;
+  --muted: #94a3b8;
+  --code-bg: rgba(255,255,255,0.02);
+  --btn-bg: rgba(255,255,255,0.03);
+  --btn-border: rgba(255,255,255,0.06);
+  --btn-text: var(--text);
+  --copied-bg: #10b981;
+  --copied-text: #051019;
 }
 
 /* ============================
    BASE STYLES
    ============================ */
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial;
   background: var(--bg);
   color: var(--text);
-  transition: background 0.3s ease, color 0.3s ease;
-  overflow-y: scroll;
+  transition: background 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
   max-width: 900px;
-  margin: auto;
+  margin: 0 auto;
   padding: 2rem 1rem;
 }
 
@@ -49,19 +74,11 @@ header {
   color: white;
   padding: 2rem 1rem;
   text-align: center;
-  transition: background 0.3s ease;
+  transition: background 0.25s ease;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 2rem;
-}
-
-header p {
-  margin-top: 0.5rem;
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
+header h1 { margin: 0; font-size: 2rem; }
+header p { margin-top: 0.5rem; font-size: 1.05rem; opacity: 0.92; }
 
 /* ============================
    FOOTER
@@ -73,57 +90,57 @@ footer {
   padding: 1rem;
   text-align: center;
   margin-top: 1rem;
-  margin-bottom: 0.5rem;
 }
 
 /* ============================
-   THEME TOGGLE
+   THEME TOGGLE (layout only)
+   - visuals handled by your existing images/icons & opacity rules
    ============================ */
 .theme-icon-toggle {
-  position: fixed;
+  position: fixed;          /* fixed so always visible */
   top: 12px;
   right: 12px;
-  width: 38px;
-  height: 38px;
-  z-index: 999;
+  width: 40px;
+  height: 40px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  background: transparent;  /* keep styling to your CSS; override only layout */
+  border-radius: 999px;
+  padding: 2px;
+  pointer-events: auto;
 }
 
+/* stack both icons in the same space and use opacity to switch */
 .theme-icon-toggle img {
-  background: var(--card);
-  border-radius: 50%;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-  padding: 6px;
   position: absolute;
-  left: -26%;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: opacity 0.3s ease;
+  border-radius: 50%;
+  display: block;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
-#icon-sun { 
-  opacity: 0; 
-}
+/* default: sun hidden with opacity rules handled below */
+#icon-sun  { opacity: 0; transform: scale(0.95); }
+#icon-moon { opacity: 0; transform: scale(0.95); }
 
-[data-theme='light'] #icon-sun { 
-  opacity: 1; 
-}
+/* theme-driven visibility (no inline-style overrides required) */
+html[data-theme='light']  #icon-sun  { opacity: 1; transform: scale(1); }
+html[data-theme='light']  #icon-moon { opacity: 0; transform: scale(0.95); }
 
-[data-theme='light'] #icon-moon { 
-  opacity: 0; 
-}
-
-[data-theme='dark'] #icon-sun { 
-  opacity: 0; 
-}
-
-[data-theme='dark'] #icon-moon { 
-  opacity: 1; 
-}
+html[data-theme='dark']   #icon-sun  { opacity: 0; transform: scale(0.95); }
+html[data-theme='dark']   #icon-moon { opacity: 1; transform: scale(1); }
 
 /* ============================
    ACCORDION COMPONENTS
+   - JS drives height transitions; CSS provides base states
    ============================ */
 .accordion-btn {
   background: var(--card);
@@ -132,42 +149,39 @@ footer {
   display: flex;
   align-items: center;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
   gap: 0.6rem;
-  margin-top: 4px;
+  margin-top: 6px;
   padding: 0.9rem 1rem;
   text-align: left;
   width: 100%;
-  transition: background 0.3s ease, color 0.3s ease;
   color: var(--text);
+  transition: background 0.18s ease, color 0.18s ease, transform 0.06s ease;
 }
 
-.accordion-btn:hover {
-  background: var(--hover);
-  color: white;
-}
+.accordion-btn:hover { background: var(--hover); color: white; transform: translateY(-1px); }
 
 .accordion-panel {
   background: var(--card);
   overflow: hidden;
-  height: 0;
-  visibility: hidden;
+  height: 0;                 /* JS will animate from 0 -> scrollHeight */
+  visibility: hidden;       /* JS will set visible when animating/open */
   pointer-events: none;
   padding-left: 1.2rem;
-  transition: height 0.4s ease;
+  transition: height 0.36s ease;
+  border-left: 3px solid transparent;
 }
 
+/* allow JS to control visibility/pointer; do NOT force height:auto here */
 .accordion-panel.open,
 .accordion-panel.opening,
 .accordion-panel.closing {
   visibility: visible;
   pointer-events: auto;
-  height: auto;
 }
 
-.chevron {
-  transition: transform 0.3s ease;
-}
+/* small chevron animation hint - rotation handled in JS by changing content */
+.chevron { transition: transform 0.24s ease; }
 
 /* ============================
    DOCUMENTATION LINKS
@@ -180,67 +194,107 @@ footer {
   gap: 0.5rem;
   font-size: 0.95rem;
   font-weight: 500;
-  padding: 0.4rem 1rem;
+  padding: 0.45rem 1rem;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, border-left-color 0.2s ease;
+  transition: background-color 0.18s ease, color 0.18s ease, border-left-color 0.18s ease;
 }
 
-/* SVG Icon Styling */
-.doc-link .svg {
-  flex-shrink: 0;
-  vertical-align: middle;
-}
+.doc-link .svg { flex-shrink: 0; vertical-align: middle; }
 
-/* ============================
-   LIGHT THEME HOVER STATES
-   ============================ */
-[data-theme='light'] .abstract-link:hover {
-  background-color: #4b9868;
-  color: white;
-  border-left-color: white;
-}
+/* Theme-aware hover groups (keeps existing palette choices) */
+[data-theme='light'] .abstract-link:hover { background-color: #4b9868; color: white; border-left-color: white; }
+[data-theme='light'] .class-link:hover    { background-color: #2f5d8a; color: white; border-left-color: white; }
+[data-theme='light'] .interface-link:hover{ background-color: #2f7f54; color: white; border-left-color: white; }
+[data-theme='light'] .record-link:hover   { background-color: #3a7fa6; color: white; border-left-color: white; }
 
-[data-theme='light'] .class-link:hover {
-  background-color: #2f5d8a;
-  color: white;
-  border-left-color: white;
-}
-
-[data-theme='light'] .interface-link:hover {
-  background-color: #2f7f54;
-  color: white;
-  border-left-color: white;
-}
-
-[data-theme='light'] .record-link:hover {
-  background-color: #3a7fa6;
-  color: white;
-  border-left-color: white;
-}
+[data-theme='dark'] .abstract-link:hover  { background-color: #9ef0c1; color: black; border-left-color: black; }
+[data-theme='dark'] .class-link:hover     { background-color: #5081a9; color: white; border-left-color: white; }
+[data-theme='dark'] .interface-link:hover { background-color: #5ed699; color: black; border-left-color: black; }
+[data-theme='dark'] .record-link:hover    { background-color: #7dbbe6; color: black; border-left-color: black; }
 
 /* ============================
-   DARK THEME HOVER STATES
+   CODE SNIPPET STYLES
+   - Use theme variables defined above
    ============================ */
-[data-theme='dark'] .abstract-link:hover {
-  background-color: #9ef0c1;
-  color: black;
-  border-left-color: black;
+.code-snippet {
+  margin: 1.4rem 0;
+  padding: 0.25rem 0;
 }
 
-[data-theme='dark'] .class-link:hover {
-  background-color: #5081a9;
-  color: white;
-  border-left-color: white;
+.code-snippet h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+  color: var(--text);
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
 }
 
-[data-theme='dark'] .interface-link:hover {
-  background-color: #5ed699;
-  color: black;
-  border-left-color: black;
+/* container similar to your panels */
+.code-block {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  border-radius: 10px;
+  padding: 0.6rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
 }
 
-[data-theme='dark'] .record-link:hover {
-  background-color: #7dbbe6;
-  color: black;
-  border-left-color: black;
+/* pre/code styling */
+.code-block pre {
+  margin: 0;
+  padding: 0.6rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: transparent;
+}
+
+/* copy button positioned top-right */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background .18s ease, color .18s ease, transform .06s ease;
+  backdrop-filter: blur(4px);
+}
+
+/* hover/focus */
+.copy-btn:hover,
+.copy-btn:focus {
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* copied state */
+.copy-btn.copied {
+  background: var(--copied-bg);
+  color: var(--copied-text);
+  border-color: transparent;
+}
+
+/* inner icon style */
+.copy-btn .icon { display: inline-flex; align-items:center; justify-content:center; width:16px; height:16px; }
+
+/* responsiveness tweaks */
+@media (max-width: 520px) {
+  .theme-icon-toggle { top: 8px; right: 8px; width:36px; height:36px; }
+  .copy-btn { top: 6px; right: 6px; padding: 5px 8px; font-size: 0.85rem; }
+  .code-block pre { font-size: 0.9rem; }
 }
